@@ -1,0 +1,7 @@
+- # ToDo
+- <Tab> or <Space> or <C-C>: toggle status.
+- -: New
+- ~: Action
+- /: Done
+- normal o or O: insert TODO
+

@@ -1,50 +1,53 @@
 "AUTHOR:   Atsushi Mizoue <asionfb@gmail.com>
-"WEBSITE:  https://github.com/AtsushiM/FastProject.vim
+"WEBSITE:  https://github.com/AtsushiM/simple-todo.vim
 "VERSION:  0.9
 "LICENSE:  MIT
 
-let g:FastProject_PluginDir = expand('<sfile>:p:h:h').'/'
-let g:FastProject_TemplateDir = g:FastProject_PluginDir.'template/'
-let g:FastProject_SubDir = g:FastProject_PluginDir.'sub/'
-let s:FastProject_ToDoNo = 0
-let s:FastProject_ToDoOpen = 0
+let g:simple_todo_PluginDir = expand('<sfile>:p:h:h').'/'
+let g:simple_todo_TemplateDir = g:simple_todo_PluginDir.'template/'
+let g:simple_todo_SubDir = g:simple_todo_PluginDir.'sub/'
+let s:simple_todo_ToDoNo = 0
+let s:simple_todo_ToDoOpen = 0
 
-if !exists("g:FastProject_DefaultConfigDir")
-    let g:FastProject_DefaultConfigDir = $HOME.'/.vimfastproject/'
+if !exists("g:simple_todo_DefaultConfigDir")
+    let g:simple_todo_DefaultConfigDir = $HOME.'/.simple-todo/'
 endif
-if !exists("g:FastProject_DefaultToDo")
-    let g:FastProject_DefaultToDo = '~FastProject-ToDo~'
+if !exists("g:simple_todo_DefaultToDo")
+    let g:simple_todo_DefaultToDo = '~ToDo~'
 endif
-if !exists("g:FastProject_ToDoWindowSize")
-    let g:FastProject_ToDoWindowSize = 'topleft 50vs'
+if !exists("g:simple_todo_ToDoWindowSize")
+    let g:simple_todo_ToDoWindowSize = 'topleft 50vs'
 endif
 
 " config
-let s:FastProject_DefaultToDo = g:FastProject_DefaultConfigDir.g:FastProject_DefaultToDo
-if !filereadable(s:FastProject_DefaultToDo)
-    call system('cp '.g:FastProject_TemplateDir.g:FastProject_DefaultToDo.' '.s:FastProject_DefaultToDo)
+if !isdirectory(g:simple_todo_DefaultConfigDir)
+    call mkdir(g:simple_todo_DefaultConfigDir)
+endif
+let s:simple_todo_DefaultToDo = g:simple_todo_DefaultConfigDir.g:simple_todo_DefaultToDo
+if !filereadable(s:simple_todo_DefaultToDo)
+    call system('cp '.g:simple_todo_TemplateDir.g:simple_todo_DefaultToDo.' '.s:simple_todo_DefaultToDo)
 endif
 
-function! s:FPToDoOpen()
-    exec g:FastProject_ToDoWindowSize." ".g:FastProject_DefaultConfigDir.g:FastProject_DefaultToDo
-    let s:FastProject_ToDoOpen = 1
-    let s:FastProject_ToDoNo = bufnr('%')
+function! s:ToDoOpen()
+    exec g:simple_todo_ToDoWindowSize." ".g:simple_todo_DefaultConfigDir.g:simple_todo_DefaultToDo
+    let s:simple_todo_ToDoOpen = 1
+    let s:simple_todo_ToDoNo = bufnr('%')
 endfunction
-function! s:FPToDoClose()
-    let s:FastProject_ToDoOpen = 0
-    FPToDoSort
-    exec 'bw '.s:FastProject_ToDoNo
+function! s:ToDoClose()
+    let s:simple_todo_ToDoOpen = 0
+    SToDoSort
+    exec 'bw '.s:simple_todo_ToDoNo
     winc p
 endfunction
 
-function! s:FPToDo()
-    if s:FastProject_ToDoOpen == 0
-        call s:FPToDoOpen()
+function! s:ToDo()
+    if s:simple_todo_ToDoOpen == 0
+        call s:ToDoOpen()
     else
-        call s:FPToDoClose()
+        call s:ToDoClose()
     endif
 endfunction
-function! s:FPCheckToDoStatus()
+function! s:CheckToDoStatus()
     let todo = getline('.')
     let i = matchlist(todo, '\v^([-~/])\s(.*)')
     let flg = 0
@@ -66,8 +69,8 @@ function! s:FPCheckToDoStatus()
 
     return st
 endfunction
-function! s:FPChangeToDoStatus()
-    let st = <SID>FPCheckToDoStatus()
+function! s:ChangeToDoStatus()
+    let st = <SID>CheckToDoStatus()
 
     if st == '-'
         let st = '~'
@@ -81,8 +84,8 @@ function! s:FPChangeToDoStatus()
     silent normal ^ll
     silen w
 endfunction
-function! s:FPToDoRemove()
-    let file = g:FastProject_DefaultConfigDir.g:FastProject_DefaultToDo
+function! s:ToDoRemove()
+    let file = g:simple_todo_DefaultConfigDir.g:simple_todo_DefaultToDo
     let todo = readfile(file)
     let ret = ''
     for e in todo
@@ -94,8 +97,8 @@ function! s:FPToDoRemove()
 
     call system('echo -e "'.ret.'" > '.file)
 endfunction
-function! FPToDoSort()
-    let file = g:FastProject_DefaultConfigDir.g:FastProject_DefaultToDo
+function! ToDoSort()
+    let file = g:simple_todo_DefaultConfigDir.g:simple_todo_DefaultToDo
     let todo = readfile(file)
     let ret_normal = ''
     let ret_action = ''
@@ -119,29 +122,29 @@ function! FPToDoSort()
     call system('echo -e "'.ret.'" > '.file)
 endfunction
 
-command! FPToDo call s:FPToDo()
-command! FPCheckToDoStatus call s:FPCheckToDoStatus()
-command! FPChangeToDoStatus call s:FPChangeToDoStatus()
-command! FPToDoSort call FPToDoSort()
-command! FPToDoRemove call s:FPToDoRemove()
+command! SToDo call s:ToDo()
+command! SCheckToDoStatus call s:CheckToDoStatus()
+command! SChangeToDoStatus call s:ChangeToDoStatus()
+command! SToDoSort call ToDoSort()
+command! SToDoRemove call s:ToDoRemove()
 
-function! s:FPSetBufMapToDo()
+function! s:SetBufMapToDo()
     set cursorline
     inoremap <buffer><silent> <CR> <Esc>o- 
-    inoremap <buffer><silent> <Esc> <Esc>:FPCheckToDoStatus<CR>
-    nnoremap <buffer><silent> o o<Esc>:FPCheckToDoStatus<CR>a
-    nnoremap <buffer><silent> O O<Esc>:FPCheckToDoStatus<CR>a
-    nnoremap <buffer><silent> <Space> :FPChangeToDoStatus<CR>
-    nnoremap <buffer><silent> <Tab> :FPChangeToDoStatus<CR>
-    nnoremap <buffer><silent> <C-C> :FPChangeToDoStatus<CR>
-    nnoremap <buffer><silent> q :call <SID>FPToDoClose()<CR>
+    inoremap <buffer><silent> <Esc> <Esc>:SCheckToDoStatus<CR>
+    nnoremap <buffer><silent> o o<Esc>:SCheckToDoStatus<CR>a
+    nnoremap <buffer><silent> O O<Esc>:SCheckToDoStatus<CR>a
+    nnoremap <buffer><silent> <Space> :SChangeToDoStatus<CR>
+    nnoremap <buffer><silent> <Tab> :SChangeToDoStatus<CR>
+    nnoremap <buffer><silent> <C-C> :SChangeToDoStatus<CR>
+    nnoremap <buffer><silent> q :call <SID>ToDoClose()<CR>
 endfunction
-exec 'au BufRead '.g:FastProject_DefaultToDo.' call <SID>FPSetBufMapToDo()'
-exec 'au BufRead '.g:FastProject_DefaultToDo.' set filetype=fptodo'
-exec 'au BufWinLeave '.g:FastProject_DefaultToDo.' call <SID>FPToDoClose()'
+exec 'au BufRead '.g:simple_todo_DefaultToDo.' call <SID>SetBufMapToDo()'
+exec 'au BufRead '.g:simple_todo_DefaultToDo.' set filetype=stodo'
+exec 'au BufWinLeave '.g:simple_todo_DefaultToDo.' call <SID>ToDoClose()'
 
-function! s:FPVimLeaveToDo()
-    FPToDoRemove
-    FPToDoSort
+function! s:VimLeaveToDo()
+    SToDoRemove
+    SToDoSort
 endfunction
-exec 'au VimLeave * call <SID>FPVimLeaveToDo()'
+exec 'au VimLeave * call <SID>VimLeaveToDo()'
