@@ -5,7 +5,6 @@
 
 let g:simple_todo_PluginDir = expand('<sfile>:p:h:h').'/'
 let g:simple_todo_TemplateDir = g:simple_todo_PluginDir.'template/'
-let g:simple_todo_SubDir = g:simple_todo_PluginDir.'sub/'
 
 if !exists("g:simple_todo_DefaultConfigDir")
     let g:simple_todo_DefaultConfigDir = $HOME.'/.simple-todo/'
